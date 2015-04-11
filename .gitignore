@@ -28,4 +28,3 @@ node_modules
 
 # Browerify and Watchify
 .bundle.js
-bundle.js
