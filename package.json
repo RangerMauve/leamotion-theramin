@@ -29,6 +29,7 @@
   },
   "dependencies": {
     "audio-context": "^0.1.0",
+    "hoover.js": "0.0.3",
     "leapjs": "^0.6.4"
   }
 }

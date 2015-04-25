@@ -1,28 +1,22 @@
 var Leap = require("leapjs");
 var ctx = require("audio-context");
+var Hoover = require("hoover.js");
 
 var main = document.querySelector("main");
 
 var gain = ctx.createGain();
-
 gain.gain.value = 0.2;
 gain.connect(ctx.destination);
 
-var oscillator1 = ctx.createOscillator();
+var osc = new Hoover(ctx);
 
-oscillator1.type = "sine";
-oscillator1.start();
-
-var oscillator2 = ctx.createOscillator();
-
-oscillator2.type = "sine";
-oscillator2.start();
+osc.frequency.value = 290;
+osc.start();
 
 var had_hand = false;
 var known_hands = 0;
 var known_frequency = 0;
 var known_level = 0.2;
-var known_detune = 0;
 
 Leap.loop(handle_update);
 
@@ -31,7 +25,7 @@ function handle_update(frame) {
 	var num_hands = hands.length;
 	known_hands = num_hands;
 	if (num_hands === 0) {
-		//check_should_stop();
+		check_should_stop();
 	} else if (num_hands === 1) {
 		check_should_play();
 		process_right(hands[0])
@@ -58,8 +52,6 @@ function render_info() {
 		known_hands +
 		"</div><div>Frequency: " +
 		known_frequency +
-		"</div><div>Detune: " +
-		known_detune +
 		"</div><div>Volume: " +
 		known_level +
 		"</div>";
@@ -81,12 +73,8 @@ function check_should_stop() {
 
 function process_right(hand) {
 	var height = hand.palmPosition[1];
-	var depth = hand.palmPosition[2];
-	var c4 = 261.63;
-	var frequency = c4 + height;
-	var detune_distance = depth * 1.5;
+	var frequency = 50 + height * 2;
 	tune(frequency);
-	detune(detune_distance);
 }
 
 function process_left(hand) {
@@ -97,14 +85,12 @@ function process_left(hand) {
 
 function play() {
 	console.log("Playing");
-	oscillator1.connect(gain);
-	oscillator2.connect(gain);
+	osc.connect(gain);
 }
 
 function stop() {
 	console.log("Stopping");
-	oscillator1.disconnect(gain);
-	oscillator2.disconnect(gain);
+	osc.disconnect(gain);
 }
 
 function volume(level) {
@@ -114,11 +100,8 @@ function volume(level) {
 
 function tune(frequency) {
 	known_frequency = frequency;
-	oscillator1.frequency.value = frequency;
-	oscillator2.frequency.value = frequency;
-}
-
-function detune(distance) {
-	known_detune = distance;
-	oscillator2.detune.value = distance;
+	osc.frequency.exponentialRampToValueAtTime(
+		frequency,
+		ctx.currentTime + 0.1
+	);
 }
